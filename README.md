@@ -1,0 +1,1 @@
+# Inkbird-Mini-IBS-TH1-adapter
