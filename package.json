@@ -1,5 +1,5 @@
 {
-  "name": "inkbird-mini-ibs-th1-adapter",
+  "name": "Inkbird-Mini-IBS-TH1-adapter",
   "display_name": "Inkbird Mini IBS TH1",
   "version": "0.0.1",
   "description": "Connect your Inkbird Mini IBS TH1 (bluetooth environmental sensor)",
@@ -34,7 +34,7 @@
     "exec": "{nodeLoader} {path}"
   },
   "dependencies": {
-    "@ddean/noble": "^1.9.2-2"
+    "@abandonware/noble": "https://github.com/ddean/noble.git"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
