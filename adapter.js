@@ -38,8 +38,8 @@ class InkbirdMiniIbsTh1 extends Device {
       type: 'number',
       minimum: 0,
       maximum: 100,
-      multipleOf: 0.5,
-      unit: '%',
+      multipleOf: 0.01,
+      unit: 'percent',
       title: 'humidity',
       description: 'The relative humidity',
       readOnly: true
@@ -47,21 +47,10 @@ class InkbirdMiniIbsTh1 extends Device {
 
     this.addProperty({
       type: 'number',
-      minimum: 500,
-      maximum: 1156,
-      multipleOf: 0.01,
-      unit: 'hPa',
-      title: 'pressure',
-      description: 'The atmospheric pressure',
-      readOnly: true
-    });
-
-    this.addProperty({
-      type: 'number',
       minimum: 0,
-      maximum: 4000,
+      maximum: 100,
       multipleOf: 1,
-      unit: 'mV',
+      unit: 'percent',
       title: 'battery',
       description: 'The battery voltage',
       readOnly: true
@@ -75,23 +64,18 @@ class InkbirdMiniIbsTh1 extends Device {
 
   setData(manufacturerData) {
     const parsedData = {
-      temperature: 0,
-      humidity: 0,
-      pressure: 0,
-      battery: 0
+      temperature: manufacturerData.readUInt16LE(0) / 100.0,
+      humidity: manufacturerData.readUInt16LE(2) / 100.0,
+      battery: manufacturerData.readUInt8(7)
     };
 
-    const tempProperty = this.properties.get('temperature');
+  const tempProperty = this.properties.get('temperature');
     tempProperty.setCachedValue(parsedData.temperature);
     this.notifyPropertyChanged(tempProperty);
 
     const humiProperty = this.properties.get('humidity');
     humiProperty.setCachedValue(parsedData.humidity);
     this.notifyPropertyChanged(humiProperty);
-
-    const pressureProperty = this.properties.get('pressure');
-    pressureProperty.setCachedValue((parsedData.pressure / 100).toFixed(2));
-    this.notifyPropertyChanged(pressureProperty);
 
     const batteryProperty = this.properties.get('battery');
     batteryProperty.setCachedValue(parsedData.battery);
@@ -116,21 +100,25 @@ class InkbirdMiniIbsTh1Adapter extends Adapter {
     });
 
     noble.on('discover', (peripheral) => {
-      const manufacturerData = peripheral.advertisement.manufacturerData;
+      if(peripheral.advertisement && peripheral.advertisement.localName) {
 
-      //                                                            v TODO
-      if (manufacturerData && manufacturerData.readUInt16LE(0) === 0x0499) {
-        const id = peripheral.id;
-        let knownDevice = this.knownDevices[id];
+        if(peripheral.advertisement.localName === 'sps' &&
+           peripheral.advertisement.manufacturerData &&
+           peripheral.advertisement.manufacturerData.length === 9) {
+          let manufacturerData = peripheral.advertisement.manufacturerData;
 
-        if (!knownDevice) {
-          console.log(`Detected new Inkbird Mini IBS TH1 with id ${id}`);
-          knownDevice = new InkbirdMiniIbsTh1(this, manifest, id);
-          this.handleDeviceAdded(knownDevice);
-          this.knownDevices[id] = knownDevice;
+          const id = peripheral.id;
+          let knownDevice = this.knownDevices[id];
+
+          if (!knownDevice) {
+            console.log(`Detected new Inkbird Mini IBS TH1 with id ${id}`);
+            knownDevice = new InkbirdMiniIbsTh1(this, manifest, id);
+            this.handleDeviceAdded(knownDevice);
+            this.knownDevices[id] = knownDevice;
+          }
+
+          knownDevice.setData(manufacturerData);
         }
-
-        knownDevice.setData(manufacturerData);
       }
     });
   }
