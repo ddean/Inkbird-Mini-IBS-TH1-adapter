@@ -6,7 +6,7 @@
 
 'use strict';
 
-const noble = require('ddean/noble');
+const noble = require('@abandonware/noble');
 
 const {
   Adapter,
